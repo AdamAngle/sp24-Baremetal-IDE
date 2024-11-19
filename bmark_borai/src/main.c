@@ -233,6 +233,84 @@ void run_bmark_mac_unaligned() {
   // printf("Test complete, operation cycle count: %lu\r\n", (end_time - start_time));
 }
 
+void run_bmark_memcpy(int32_t region_size_lines = 8) {
+  __attribute__((aligned(CACHELINE))) uint64_t mem1[CACHELINE / sizeof(uint64_t) * region_size_lines];
+  __attribute__((aligned(CACHELINE))) uint64_t mem2[CACHELINE / sizeof(uint64_t) * region_size_lines];
+  __attribute__((aligned(CACHELINE))) uint64_t mem2_cpu[CACHELINE / sizeof(uint64_t) * region_size_lines];
+
+  puts("--- Test: Initializing memory\r\n");
+
+  for (size_t i = 0; i < sizeof(mem1)/sizeof(uint64_t); i++) {
+    mem1[i] = i;
+  }
+
+  void* src_addr = mem1;
+  void* dest_addr = mem2;
+  uint64_t stride = CACHELINE;
+  uint32_t count = REGION_SIZE_LINES;
+
+  printf("--- Test: Generating time comparison using CPU\r\n");
+
+  uint64_t start_time_cpu = READ_CSR("mcycle");
+  for (size_t i = 0; i < sizeof(mem1)/sizeof(uint64_t); i++) {
+    mem2_cpu[i] = mem1[i];
+  }
+  uint64_t end_time_cpu = READ_CSR("mcycle");
+
+  printf("--- Test: Verifying CPU memcpy\r\n");
+
+  for (size_t i = 0; i < sizeof(mem1)/sizeof(uint64_t); i++) {
+    if (mem2_cpu[i] != mem1[i]) {
+      if (expected[i] != ((volatile int16_t *)DMA1->DEST_REG)[i]) {
+        printf("!\r\n");
+
+        printf("Expected %d at index %ld, got %d\r\n", expected[i], i, ((volatile int16_t *)DMA1->DEST_REG)[i]);
+      
+      } else {
+        printf(".");
+      }
+    }
+  }
+
+  printf("--- Test: Waiting for DMA ready\r\n");
+
+  status = dma_await_result(DMA1); // wait for ready
+
+  printf("--- Test: Performing MEMCPY with initial status %i\r\n", status);
+  printf("--- Test: \tsrc_addr: %p\r\n", src_addr);
+  printf("--- Test: \tdest_addr: %p\r\n", dest_addr);
+  printf("--- Test: \tstride:   %i\r\n", stride);
+  printf("--- Test: \tcount:    %i\r\n", count);
+
+  printf("--- Test: Performing MEMCPY\r\n");
+
+  dma_init_memcpy(DMA1, src_addr, dest_addr, stride, count);
+
+  status = dma_await_result(DMA1);
+  uint64_t end_time = READ_CSR("mcycle");
+  if (dma_operation_errored(DMA1)) {
+    printf("Error detected, status set to %i\r\n", status);
+  } else {
+    printf("No error detected, state set to %i\r\n", status);
+  }
+
+  printf("--- Test: Verifying accelerator memcpy\r\n");
+
+  for (size_t i = 0; i < sizeof(mem1)/sizeof(uint64_t); i++) {
+    if (mem2_cpu[i] != mem1[i]) {
+      if (expected[i] != ((volatile int16_t *)DMA1->DEST_REG)[i]) {
+        printf("!\r\n");
+        printf("Expected %d at index %ld, got %d\r\n", expected[i], i, ((volatile int16_t *)DMA1->DEST_REG)[i]);
+      } else {
+        printf(".");
+      }
+    }
+  }
+
+  
+
+}
+
 void app_main() {
   uint64_t mhartid = READ_CSR("mhartid");
   Status status;
@@ -247,6 +325,7 @@ void app_main() {
     printf("Enter the ID for the test you wish to run:\r\n");
     int8_t entered_id = 0;
     uart_receive(UART0, &entered_id, 1, 100);
+    printf("User input: %c\r\n", entered_id);
     switch (entered_id) {
       case 48:
         run_bmark_mac();
