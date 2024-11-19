@@ -96,7 +96,12 @@ add_executable(app
   app/src/main.c
 )
 
+add_executable(bmark_borai
+  bmark_borai/src/main.c
+)
+
 target_include_directories(app PUBLIC app/include)
+target_include_directories(bmark_borai PUBLIC bmark_borai/include)
 
 
 #################################
@@ -109,6 +114,10 @@ add_subdirectory(lib)
 add_subdirectory(lab)
 
 target_link_libraries(app PRIVATE 
+  -L${CMAKE_BINARY_DIR}/glossy -Wl,--whole-archive glossy -Wl,--no-whole-archive
+)
+
+target_link_libraries(bmark_borai PRIVATE 
   -L${CMAKE_BINARY_DIR}/glossy -Wl,--whole-archive glossy -Wl,--no-whole-archive
 )
 
