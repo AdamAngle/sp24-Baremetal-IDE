@@ -27,15 +27,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-
-#include "riscv.h"
-#include "hal_dma.h"
-
+#include "common.h"
+#include "utils.h"
 
 /**
  * This section controls which peripheral device is included in the application program.
