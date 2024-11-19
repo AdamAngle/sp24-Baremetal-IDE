@@ -162,7 +162,8 @@ int16_t saturate(int32_t x) {
 
 void run_bmark_mac(volatile uint32_t region_size_lines) {
   printf("--- Test: Running test\r\n");
-  __attribute__((aligned(CACHELINE))) int8_t mem1[region_size_lines][CACHELINE / sizeof(int8_t)];
+  // __attribute__((aligned(CACHELINE))) int8_t mem1[region_size_lines][CACHELINE / sizeof(int8_t)];
+  int8_t *mem1 = 0x90000000;
   printf("--- Test: Running 2\r\n");
   uint64_t stride = (4 * CACHELINE);
 
@@ -171,7 +172,7 @@ void run_bmark_mac(volatile uint32_t region_size_lines) {
   for (size_t i = 0; i < region_size_lines; i++) {
     for (size_t j = 0; j < CACHELINE/sizeof(int8_t); j++) {
       printf("--- Test: Loop i=%u j=u\r\n", i, j);
-      mem1[i][j] = i + j;
+      mem1[i * region_size_lines + j] = i + j;
     }
   }
 
@@ -198,7 +199,8 @@ void run_bmark_mac(volatile uint32_t region_size_lines) {
   for (size_t i = 0; i < count; i++) {
     int32_t sum = 0;
     for (size_t j = 0; j < sizeof(operandReg)/sizeof(uint8_t); j++) {
-      sum += (int16_t)operandReg[j] * (int16_t)mem1[i*(stride/CACHELINE)][j];
+      // sum += (int16_t)operandReg[j] * (int16_t)mem1[i*(stride/CACHELINE)][j];
+      sum += (int16_t)operandReg[j] * (int16_t)mem1[i*(stride/CACHELINE) * region_size_lines + j];
     }
     expected[i] = saturate(sum);
   }
