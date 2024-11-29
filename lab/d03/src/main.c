@@ -83,7 +83,17 @@ int main(int argc, char **argv) {
   /* USER CODE BEGIN WHILE */
   char name[50];
   puts("Enter your name: ");
-  scanf("%s", name);
+  // Alternative for broken scanf
+  int index = 0;
+  while (index < 49) {
+    Status status = uart_receive(UART0, &name[index], 1, 100);
+    if (name[index] == '\r') {
+      break;
+    }
+    index++;
+  }
+  name[index] = '\0';
+  // scanf("%s", name);
   printf("Hello, %s", name);
   
   /* USER CODE END WHILE */

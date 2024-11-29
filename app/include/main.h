@@ -34,6 +34,7 @@ extern "C" {
 #include <time.h>
 
 #include "riscv.h"
+#include "hal_dma.h"
 
 
 /**

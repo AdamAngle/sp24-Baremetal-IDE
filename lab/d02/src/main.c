@@ -60,17 +60,28 @@ void app_init() {
 
   gpio_init(GPIOA, &gpio_init_config, GPIO_PIN_0);
   
-  gpio_write_pin(GPIOA, GPIO_PIN_0, 1);
+  // gpio_write_pin(GPIOA, GPIO_PIN_0, 1);
+
+
+  GPIO_InitType gpio_init_config2;
+  gpio_init_config2.mode = GPIO_MODE_INPUT;
+  gpio_init_config2.pull = GPIO_PULL_NONE;
+  gpio_init_config2.drive_strength = GPIO_DS_STRONG;
+
+  gpio_init(GPIOA, &gpio_init_config2, GPIO_PIN_1);
 }
 
 
 
 void app_main() {
-  gpio_write_pin(GPIOA, GPIO_PIN_1, 1);
-  msleep(100);
+  volatile uint8_t val = gpio_read_pin(GPIOA, GPIO_PIN_1);
+	if (val == 0) {
+		gpio_write_pin(GPIOA, GPIO_PIN_0, 1);
+		msleep(100);
   
-  gpio_write_pin(GPIOA, GPIO_PIN_1, 0);
-  msleep(100);
+		gpio_write_pin(GPIOA, GPIO_PIN_0, 0);
+		msleep(100);
+	}
 }
 /* USER CODE END PUC */
 

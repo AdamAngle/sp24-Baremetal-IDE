@@ -15,7 +15,7 @@ static DMA_Status get_status(DMA_Type* DMAX) {
 }
 
 void dma_init_memcpy(DMA_Type* DMAX, void* src, void* dst, uint64_t src_stride, uint32_t count) {
-  while (dma_operation_inprogress(DMAX));
+  while (dma_operation_inprogress_and_not_error(DMAX));
   
   DMAX->SRC_ADDR = (uint64_t) src;
   DMAX->DEST_ADDR = (uint64_t) dst;
@@ -25,7 +25,7 @@ void dma_init_memcpy(DMA_Type* DMAX, void* src, void* dst, uint64_t src_stride, 
 }
 
 void dma_init_MAC(DMA_Type* DMAX, void* src, int8_t* operand, uint64_t src_stride, uint32_t count) {
-  while (dma_operation_inprogress(DMAX));
+  while (dma_operation_inprogress_and_not_error(DMAX));
 
   uint64_t* op = (uint64_t*) operand;
   for (size_t i = 0; i < 8; i++)
@@ -36,6 +36,7 @@ void dma_init_MAC(DMA_Type* DMAX, void* src, int8_t* operand, uint64_t src_strid
   DMAX->COUNT = count;
 
 }
+
 DMA_Status dma_await_result(DMA_Type* DMAX) {
   while (dma_operation_inprogress_and_not_error(DMAX));
   if (dma_operation_complete(DMAX))
